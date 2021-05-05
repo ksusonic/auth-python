@@ -10,6 +10,7 @@ from fastapi.responses import Response
 app = FastAPI()
 
 SECRET_KEY = "34d77c401b36c22caa14ee8029362992d0f32d088a2484ccac496b088865c2ce"
+PASSWORD_SALT = "3efcc56db8a7ab12b2fe388aa7bf52d1a32b8cb12b79af4a7cbb94c65e87db42"
 
 
 def sign_data(data: str) -> str:
@@ -20,6 +21,7 @@ def sign_data(data: str) -> str:
         digestmod=hashlib.sha256
     ).hexdigest().upper()
 
+
 def get_username_from_signed_string(username_signed: str) -> Optional[str]:
     username_b64, sign = username_signed.split(".")
 
@@ -28,15 +30,22 @@ def get_username_from_signed_string(username_signed: str) -> Optional[str]:
     if hmac.compare_digest(valid_sign, sign):
         return username
 
+
+def verify_password(username: str, password: str) -> bool:
+    password_hash = hashlib.sha256( (password + PASSWORD_SALT).encode()).hexdigest().lower() 
+    stored_password_hash = users[username]['password'].lower()
+    return password_hash == stored_password_hash
+
+
 users = {
     "dan@user.com": {
         "name": "Даниил",
-        "password": "some_password_1",
+        "password": "5b0697de8cfeca89106ec0f41ad4c3d4f25ac458ac19afb611361d470754d870",
         "balance": 100_000
     },
     "petr@user.com": {
         "name": "Пётр",
-        "password": "some_password_2",
+        "password": "d7d2090da3754c4cabb8a9647c28e243780cf80d7b7a0a7a96b814fca1b72215",
         "balance": 555_555
     }
 }
@@ -69,7 +78,7 @@ def index_page(username: Optional[str] = Cookie(default=None)):
 @app.post('/login')
 def process_login_page(username: str = Form(...), password: str = Form(...)):
     user = users.get(username)
-    if not user or user["password"] != password:
+    if not user or not verify_password(username, password):
         return Response("Я вас не знаю!", media_type="text/html")
 
     response = Response(
