@@ -32,7 +32,8 @@ def get_username_from_signed_string(username_signed: str) -> Optional[str]:
 
 
 def verify_password(username: str, password: str) -> bool:
-    password_hash = hashlib.sha256( (password + PASSWORD_SALT).encode()).hexdigest().lower() 
+    password_hash = hashlib.sha256(
+        (password + PASSWORD_SALT).encode()).hexdigest().lower()
     stored_password_hash = users[username]['password'].lower()
     return password_hash == stored_password_hash
 
