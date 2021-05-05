@@ -1,4 +1,5 @@
 from typing import Optional
+import json
 import base64
 import hmac
 import hashlib
@@ -73,18 +74,26 @@ def index_page(username: Optional[str] = Cookie(default=None)):
         response = Response(login_page, media_type="text/html")
         response.delete_cookie(key="username")
         return response
-    return Response(f"Привет, {users[valid_username]['name']}!", media_type="text/html")
+    return Response(f"Привет, {users[valid_username]['name']}!<br />Баланс: {users[valid_username]['balance']}", media_type="text/html")
 
 
 @app.post('/login')
 def process_login_page(username: str = Form(...), password: str = Form(...)):
     user = users.get(username)
     if not user or not verify_password(username, password):
-        return Response("Я вас не знаю!", media_type="text/html")
+        return Response(
+            json.dumps({
+                "success": False,
+                "message": "Я вас не знаю!"
+            }), 
+            media_type="application/json")
 
     response = Response(
-        f"Привет, {user['name']}<br />Баланс: {user['balance']}",
-        media_type="text/html")
+        json.dumps({
+            "success": True,
+            "message": f"Привет, {user['name']}<br />Баланс: {user['balance']}"
+        }),
+        media_type="application/json")
 
     username_signed = base64.b64encode(username.encode()).decode() + '.' + \
         sign_data(username)
