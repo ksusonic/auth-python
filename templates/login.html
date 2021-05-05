@@ -45,7 +45,7 @@
                 let password = document.querySelector('input[name=password]').value;
                 let response = await fetch('/login', {
                     method: "POST",
-                    body: new FormData(document.querySelector('form'))
+                    body: `{"username": "${username}", "password": "${password}"}`
                 });
                 let response_json = await response.json();
                 if (response_json.success) {

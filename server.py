@@ -4,7 +4,7 @@ import base64
 import hmac
 import hashlib
 
-from fastapi import FastAPI, Form, Cookie
+from fastapi import FastAPI, Form, Cookie, Body
 from fastapi.responses import Response
 
 
@@ -78,7 +78,9 @@ def index_page(username: Optional[str] = Cookie(default=None)):
 
 
 @app.post('/login')
-def process_login_page(username: str = Form(...), password: str = Form(...)):
+def process_login_page(data: dict = Body(...)):
+    username = data['username']
+    password = data['password']
     user = users.get(username)
     if not user or not verify_password(username, password):
         return Response(
